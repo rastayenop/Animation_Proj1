@@ -1,0 +1,14 @@
+.*
+**/*.o
+**/*.pro
+**/*.obj
+**/*.ply
+**/*.png
+**/*.jpg
+**/*.JPG
+**/*.exr
+trimesh2
+Makefile
+viewer/Makefile
+viewer/myViewer
+
