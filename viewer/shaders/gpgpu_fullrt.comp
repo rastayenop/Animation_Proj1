@@ -75,21 +75,31 @@ bool intersectBoundingBox(vec4 origin, vec4 dir) {
 }
 
 vec4 interpolateNormal(hitinfo_t h){
-  vec4 normal0 = normals[indices[h.hit_vptr]];
-  vec4 normal1 = normals[indices[h.hit_vptr+1]];
-  vec4 normal2 = normals[indices[h.hit_vptr+2]];
-  vec4 normale = h.t.w*normal0 + h.t.y*normal1 + h.t.z*normal2;
-  return normalize(normale);
+  if (h.hit_vptr == -1) {
+    return vec4(0,1,0,0);
+  }
+  else {
+    vec4 normal0 = normals[indices[h.hit_vptr]];
+    vec4 normal1 = normals[indices[h.hit_vptr+1]];
+    vec4 normal2 = normals[indices[h.hit_vptr+2]];
+    vec4 normale = h.t.w*normal0 + h.t.y*normal1 + h.t.z*normal2;
+    return normalize(normale);
+  }
 }
 
 vec4 interpolateColor(hitinfo_t h)
 {
 	// TODO
-  vec4 color0 = colors[indices[h.hit_vptr]];
-  vec4 color1 = colors[indices[h.hit_vptr+1]];
-  vec4 color2 = colors[indices[h.hit_vptr+2]];
-  vec4 color = h.t.w*color0 + h.t.y*color1 + h.t.z*color2;
-  return color;
+  if (h.hit_vptr==-1){
+    return vec4(0,0,1,1);
+  }
+  else {
+    vec4 color0 = colors[indices[h.hit_vptr]];
+    vec4 color1 = colors[indices[h.hit_vptr+1]];
+    vec4 color2 = colors[indices[h.hit_vptr+2]];
+    vec4 color = h.t.w*color0 + h.t.y*color1 + h.t.z*color2;
+    return color;
+  }
 }
 
 bool intersectTriangle(vec4 origin, vec4 dir, int ptr, out vec4 dist)
@@ -165,16 +175,8 @@ vec4 getPointOnGround(vec4 dir, vec4 start) {
 }
 
 vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
-  vec4 vertColor;
-  vec4 normale;
-  if (h.hit_vptr==-1){
-    vertColor = vec4(0,0,1,1);
-    normale = vec4(0,1,0,0);
-  }
-  else {
-    vertColor = interpolateColor(h);
-    normale = interpolateNormal(h);
-  }
+  vec4 vertColor = interpolateColor(h);
+  vec4 normale = interpolateNormal(h);
   vec4 lightVector = vec4(0.0);
   vec4 visiblePoint = start + h.t.x * dir;
   vec4 color;
