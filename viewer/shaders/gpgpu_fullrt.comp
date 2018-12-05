@@ -51,7 +51,13 @@ layout (std430, binding = 4) buffer Meshes
 };
 
 
-
+struct indirect_hit_t {
+    vec4 origin;
+    vec4 dir;
+    vec4 hit_point;
+    vec4 normal;
+    vec4 color;
+};
 
 
 bool intersectBoundingBox(vec4 origin, vec4 dir) {
