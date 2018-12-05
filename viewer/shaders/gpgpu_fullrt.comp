@@ -15,6 +15,7 @@ uniform float radius;
 uniform float groundDistance;
 uniform vec3 center;
 
+#define M_PI                3.14159265358979323846
 #define MAX_SCENE_BOUNDS    10.0
 #define EPS                 0.001
 
@@ -105,6 +106,7 @@ bool isIntersected(vec4 origin, vec4 dir, out hitinfo_t h)
   vec4 dist; // stores distance + barycentric coord
 	bool hit = false;
 	h.t.x = radius * MAX_SCENE_BOUNDS;
+  //check si on tape l'objet
 	if(intersectBoundingBox(origin, dir)) {
 		for(int j = 0; j < indices.length(); j += 3) {
 			if(intersectTriangle(origin, dir, j, dist)) {
@@ -116,10 +118,19 @@ bool isIntersected(vec4 origin, vec4 dir, out hitinfo_t h)
 			}
 		}
 	}
+  //check si on tape le sol
+  float lambda = dot(vec3(0,-groundDistance,0)-origin.xyz, vec3(0,1,0))/ dot(dir.xyz, vec3(0,1,0));
+  if (dir.y<0 && h.t.x>lambda && lambda>EPS && lambda<1000){ //si on tape le sol est ce que le sol est devant l'objet ?
+    h.hit_vptr = -1;
+    h.t.x = lambda;
+    h.t.yzw = origin.xyz + lambda * dir.xyz;
+    hit = true;
+  }
 	return hit;
 }
 
-bool isShady (vec4 point, vec4 from, hitinfo_t h) {
+
+bool isShady (vec4 point) {
   vec4 pointtolight;
   vec4 dist;
   pointtolight.xyz = normalize(lightPosition - point.xyz);
@@ -134,14 +145,47 @@ bool isShady (vec4 point, vec4 from, hitinfo_t h) {
 
 float fTheta (vec4 H, vec4 lightVector) {
   float cos_theta = dot(H, lightVector);
-  float c_i_theta = pow(pow(eta, 2) - (1 - pow(cos_theta, 2)), 0.5);
-  float f_s = pow((cos_theta - c_i_theta) / (cos_theta + c_i_theta), 2);
-  float f_p = pow((pow(eta,2)*cos_theta - c_i_theta) / (pow(eta,2)*cos_theta + c_i_theta), 2);
+  float c_i_theta = pow(pow(eta, 2) - (1 - cos_theta * cos_theta), 0.5);
+  float f_s = ((cos_theta - c_i_theta) / (cos_theta + c_i_theta)) * ((cos_theta - c_i_theta) / (cos_theta + c_i_theta));
+  float f_p = (pow(eta,2)*cos_theta - c_i_theta) / (pow(eta,2)*cos_theta + c_i_theta) * (pow(eta,2)*cos_theta - c_i_theta) / (pow(eta,2)*cos_theta + c_i_theta);
   float f_theta_d;
   return (f_s + f_p)*0.5;
 }
 
+vec4 getPointOnGround(vec4 dir, vec4 start) {
+  float cosTheta = dot(dir, vec4(0,-1,0,0));
+  float lambda = groundDistance/cosTheta;
+  return start + (lambda * dir);
+}
 
+vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
+  vec4 vertColor;
+  vec4 normale;
+  if (h.hit_vptr==-1){
+    vertColor = vec4(0,0,1,1);
+    normale = vec4(0,1,0,0);
+  }
+  else {
+    vertColor = interpolateColor(h);
+    normale = interpolateNormal(h);
+  }
+  vec4 lightVector = vec4(0.0);
+  vec4 visiblePoint = start + h.t.x * dir;
+  vec4 color;
+  vec4 H;
+  C_a = k_a * lightIntensity * vertColor;
+  if(isShady(visiblePoint)) {
+    color = C_a;
+  }
+  else {
+    lightVector.xyz = normalize(lightPosition - visiblePoint.xyz);
+    C_d = k_d * max(dot(normale, lightVector), 0) * lightIntensity * vertColor;
+    H = normalize(-dir + lightVector);
+    C_s = fTheta(H, lightVector) * vertColor * pow(max(dot(normale, H), 0), shininess) * lightIntensity;
+    color = C_a + C_d + C_s;
+  }
+  return color;
+}
 
 const int MAX_TRACE = 1;
 
@@ -149,8 +193,17 @@ const int MAX_TRACE = 1;
 vec4 trace(vec4 origin, vec4 dir)
 {
 	// TODO: trace a ray in the scene, see what it intersects, bounce around
-    return vec4(1);
+  vec4 dist;
+  hitinfo_t h;
+
+  if (isIntersected(origin, dir, h)){
+    return get_color(origin, dir, h);
+
+  }
+  return vec4(1.0);
 }
+
+
 
 layout (local_size_x = 8, local_size_y = 8) in;
 void main(void) {
@@ -173,37 +226,6 @@ void main(void) {
     vec4 dir = normalize((mat_inverse * worldPos));
     vec4 eye = (mat_inverse * vec4(0, 0, 0, 1));
     vec4 color = trace(eye, dir);
-    vec4 dist;
-    hitinfo_t h;
-    vec4 visiblePoint;
-    vec4 lightVector = vec4(0.0);
-    vec4 normale;
-    vec4 H;
-
-    if (intersectBoundingBox(eye, dir)) {
-      if (isIntersected(eye, dir, h)){
-        visiblePoint = eye + h.t.x * dir;
-        C_a = k_a * lightIntensity * interpolateColor(h);
-        if(isShady(visiblePoint, dir, h)) {
-          color = C_a;
-        }
-        else {
-          lightVector.xyz = normalize(lightPosition - visiblePoint.xyz);
-          normale = interpolateNormal(h);
-          C_d = k_d * max(dot(normale, lightVector), 0) * lightIntensity * interpolateColor(h);
-          H = normalize(-dir + lightVector);
-          C_s = fTheta(H, lightVector) * interpolateColor(h) * pow(max(dot(normale, H), 0), shininess) * lightIntensity;
-          color = C_a + C_d + C_s;
-        }
-      }
-    }
-    else if (dir.z < 0) {
-      color = vec4(0,0,0,1);
-    }
-    else {
-      color = vec4(1,1,1,1);
-    }
-
 
     imageStore(framebuffer, pix, color);
 }

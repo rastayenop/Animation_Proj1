@@ -54,7 +54,6 @@ float fTheta (vec4 H, vec4 lightVector) {
   float c_i_theta = pow(pow(eta, 2) - (1 - pow(cos_theta, 2)), 0.5);
   float f_s = pow((cos_theta - c_i_theta) / (cos_theta + c_i_theta), 2);
   float f_p = pow((pow(eta,2)*cos_theta - c_i_theta) / (pow(eta,2)*cos_theta + c_i_theta), 2);
-  float f_theta_d;
   return (f_s + f_p)*0.5;
 }
 
