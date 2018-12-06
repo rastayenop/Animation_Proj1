@@ -27,8 +27,10 @@ glShaderWindow::glShaderWindow(QWindow *parent)
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
       environmentMap(0), texture(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
       isGPGPU(false), hasComputeShaders(false), blinnPhong(true), transparent(true), eta(1.5), lightIntensity(1.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
+      userInteract(false),
       shadowMap_fboId(0), shadowMap_rboId(0), shadowMap_textureId(0), fullScreenSnapshots(false), computeResult(0), 
-      m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer)
+      m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer),
+      m_timerId(0), m_shaderName("1_simple")
 {
     // Default values you might want to tinker with
     shadowMapDimension = 2048;
@@ -641,6 +643,10 @@ void glShaderWindow::setWindowSize(const QString& size)
 
 void glShaderWindow::setShader(const QString& shader)
 {
+    if (!userInteract) {
+        m_shaderName = shader;
+    }
+
     // Prepare a complete shader program...
 	QString shaderPath = workingDirectory + "../shaders/";
     QDir shadersDir = QDir(shaderPath);
@@ -954,6 +960,8 @@ void glShaderWindow::mouseToTrackball(QVector2D &mousePosition, QVector3D &space
 // virtual trackball implementation
 void glShaderWindow::mousePressEvent(QMouseEvent *e)
 {
+    userInteract = true;
+    setShader("2_phong");
     lastMousePosition = (2.0/m_screenSize) * (QVector2D(e->localPos()) - QVector2D(0.5 * width(), 0.5*height()));
     mouseToTrackball(lastMousePosition, lastTBPosition);
     mouseButton = e->button();
@@ -961,6 +969,13 @@ void glShaderWindow::mousePressEvent(QMouseEvent *e)
 
 void glShaderWindow::wheelEvent(QWheelEvent * ev)
 {
+    userInteract = true;
+    setShader("2_phong");
+    if (m_timerId != 0) {
+        killTimer(m_timerId);
+    }
+    m_timerId = startTimer(500);
+
     int matrixMoving = 0;
     if (ev->modifiers() & Qt::ShiftModifier) matrixMoving = 1;
     else if (ev->modifiers() & Qt::AltModifier) matrixMoving = 2;
@@ -1016,17 +1031,28 @@ void glShaderWindow::mouseMoveEvent(QMouseEvent *e)
     }
     lastTBPosition = currTBPosition;
     lastMousePosition = mousePosition;
+
     renderNow();
 }
 
 void glShaderWindow::mouseReleaseEvent(QMouseEvent *e)
 {
     mouseButton = Qt::NoButton;
+
+    userInteract = false;
+    setShader(m_shaderName);
+    renderNow();
 }
 
 void glShaderWindow::timerEvent(QTimerEvent *e)
 {
-
+    if (userInteract) {
+        userInteract = false;
+        setShader(m_shaderName);
+        killTimer(m_timerId);
+        m_timerId = 0;
+        renderNow();
+    }
 }
 
 static int nextPower2(int x) {

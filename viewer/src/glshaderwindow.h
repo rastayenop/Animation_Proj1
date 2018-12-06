@@ -107,6 +107,9 @@ private:
     float lightDistance;
     float groundDistance;
 
+    // Interaction parameter
+    bool userInteract;
+
 
     // OpenGL variables encapsulated by Qt
     QOpenGLShaderProgram *m_program;
@@ -154,6 +157,9 @@ private:
     float m_screenSize; // max window dimension
     QWidget* auxWidget; // window for parameters
     QWidget* container;
+    QString m_shaderName;
+
+    int m_timerId; // timer pour interactivité
 };
 
 #endif // GLSHADERWINDOW_H
