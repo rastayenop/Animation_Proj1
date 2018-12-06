@@ -19,11 +19,12 @@ uniform vec3 center;
 #define MAX_SCENE_BOUNDS    10.0
 #define EPS                 0.001
 
-float k_a = 0.1;
+float k_a = 0.05;
 float k_d = 0.5;
 vec4 C_a = vec4(0.0,0.0,0.0,1.0);
 vec4 C_d = vec4(0.0,0.0,0.0,1.0);
 vec4 C_s = vec4(0.0,0.0,0.0,1.0);
+float rayonPlateau = 300;
 
 struct hitinfo_t {
     vec4 t;
@@ -74,6 +75,8 @@ bool intersectBoundingBox(vec4 origin, vec4 dir) {
     return true;
 }
 
+
+
 vec4 interpolateNormal(hitinfo_t h){
   if (h.hit_vptr == -1) {
     return vec4(0,1,0,0);
@@ -87,11 +90,17 @@ vec4 interpolateNormal(hitinfo_t h){
   }
 }
 
+vec4 colorFromGround(hitinfo_t h){
+  //vec2 vectorFromCenter = h.t.yw - center.xz;
+  //return texture2D(colorTexture, vec2(dot(normalize(vectorFromCenter),vec2(1,0))/M_PI, length(vectorFromCenter)/rayonPlateau));
+  return vec4(0,1,0,0);
+}
+
 vec4 interpolateColor(hitinfo_t h)
 {
 	// TODO
   if (h.hit_vptr==-1){
-    return vec4(0,0,1,1);
+    return colorFromGround(h);
   }
   else {
     vec4 color0 = colors[indices[h.hit_vptr]];
@@ -135,8 +144,10 @@ bool isIntersected(vec4 origin, vec4 dir, out hitinfo_t h)
 		}
 	}
   //check si on tape le sol
+  vec3 centerOfBoundingBox = (bbmax+bbmin)*0.5;
   float lambda = dot(vec3(0,-groundDistance,0)-origin.xyz, vec3(0,1,0))/ dot(dir.xyz, vec3(0,1,0));
-  if (dir.y<0 && h.t.x>lambda && lambda>EPS && lambda<1000){ //si on tape le sol est ce que le sol est devant l'objet ?
+  float distToOrigin = length((origin+lambda*dir).xz - (centerOfBoundingBox.xz));
+  if (h.t.x>lambda && lambda>EPS && distToOrigin<rayonPlateau){ //si on tape le sol est ce que le sol est devant l'objet ?
     h.hit_vptr = -1;
     h.t.x = lambda;
     h.t.yzw = origin.xyz + lambda * dir.xyz;
@@ -168,11 +179,6 @@ float fTheta (vec4 H, vec4 lightVector) {
   return (f_s + f_p)*0.5;
 }
 
-vec4 getPointOnGround(vec4 dir, vec4 start) {
-  float cosTheta = dot(dir, vec4(0,-1,0,0));
-  float lambda = groundDistance/cosTheta;
-  return start + (lambda * dir);
-}
 
 vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
   vec4 vertColor = interpolateColor(h);
@@ -181,8 +187,10 @@ vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
   vec4 visiblePoint = start + h.t.x * dir;
   vec4 color;
   vec4 H;
-  C_a = k_a * lightIntensity * vertColor;
+  //C_a = k_a * lightIntensity * vertColor;
+  C_a = vec4(0.0);
   if(isShady(visiblePoint)) {
+    C_a = k_a * lightIntensity * vertColor;
     color = C_a;
   }
   else {
@@ -195,22 +203,21 @@ vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
   return color;
 }
 
-const int MAX_TRACE = 2;
+const int MAX_TRACE = 5;
 
 
 vec4 trace(vec4 origin, vec4 dir)
 {
 	// TODO: trace a ray in the scene, see what it intersects, bounce around
   vec4 dist;
-  vec4 color;
+  vec4 color = vec4(0);
   hitinfo_t h;
-
-  bool hit = isIntersected(origin, dir, h);
-  if (!hit) {
+  float alpha = 1/eta;
+  // Est ce qu'on hit rien du tout?
+  if (!isIntersected(origin, dir, h)) {
     return vec4(1.0);
-    //return get_color(origin, dir, h);
   }
-
+  // Si non
   indirect_hit_t all_traces[MAX_TRACE];
   vec4 inter = origin + h.t.x*dir;
   all_traces[0].origin = origin;
@@ -235,19 +242,13 @@ vec4 trace(vec4 origin, vec4 dir)
       inter = inter + h.t.x*reflect_dir;
       reflect_dir = reflect(all_traces[trace_it].dir, all_traces[trace_it].normal);
   }
-
-  color = vec4(0);
-
-  float alpha = 1/eta;
   for (int trace_it = last_trace; trace_it >= 0; trace_it--) {
     vec4 color_it = all_traces[trace_it].color;
     vec4 normal_it = all_traces[trace_it].normal;
     vec4 light_it = reflect(normal_it,  all_traces[trace_it].dir);
-
     color = alpha*color + color_it;
     //color = fTheta(normal_it, light_it)*color + color_it;
   }
-
   return color;
 }
 
