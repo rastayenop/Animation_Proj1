@@ -960,8 +960,10 @@ void glShaderWindow::mouseToTrackball(QVector2D &mousePosition, QVector3D &space
 // virtual trackball implementation
 void glShaderWindow::mousePressEvent(QMouseEvent *e)
 {
-    userInteract = true;
-    setShader("2_phong");
+    if (!m_shaderName.contains("sphere", Qt::CaseInsensitive)) {
+        userInteract = true;
+        setShader("2_phong");
+    }
     lastMousePosition = (2.0/m_screenSize) * (QVector2D(e->localPos()) - QVector2D(0.5 * width(), 0.5*height()));
     mouseToTrackball(lastMousePosition, lastTBPosition);
     mouseButton = e->button();
@@ -969,12 +971,14 @@ void glShaderWindow::mousePressEvent(QMouseEvent *e)
 
 void glShaderWindow::wheelEvent(QWheelEvent * ev)
 {
-    userInteract = true;
-    setShader("2_phong");
-    if (m_timerId != 0) {
-        killTimer(m_timerId);
+    if (!m_shaderName.contains("sphere", Qt::CaseInsensitive)) {
+        userInteract = true;
+        setShader("2_phong");
+        if (m_timerId != 0) {
+            killTimer(m_timerId);
+        }
+        m_timerId = startTimer(500);
     }
-    m_timerId = startTimer(500);
 
     int matrixMoving = 0;
     if (ev->modifiers() & Qt::ShiftModifier) matrixMoving = 1;
@@ -1039,9 +1043,11 @@ void glShaderWindow::mouseReleaseEvent(QMouseEvent *e)
 {
     mouseButton = Qt::NoButton;
 
-    userInteract = false;
-    setShader(m_shaderName);
-    renderNow();
+    if (userInteract) {
+        userInteract = false;
+        setShader(m_shaderName);
+        renderNow();
+    }
 }
 
 void glShaderWindow::timerEvent(QTimerEvent *e)
