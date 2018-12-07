@@ -680,7 +680,9 @@ void glShaderWindow::setShader(const QString& shader)
         // TODO: release SSBO
     }
     bindSceneToProgram();
-    loadTexturesForShaders();
+    if (!userInteract) {
+        loadTexturesForShaders();
+    }
     renderNow();
 }
 
@@ -1044,8 +1046,8 @@ void glShaderWindow::mouseReleaseEvent(QMouseEvent *e)
     mouseButton = Qt::NoButton;
 
     if (userInteract) {
-        userInteract = false;
         setShader(m_shaderName);
+        userInteract = false;
         renderNow();
     }
 }
@@ -1053,8 +1055,8 @@ void glShaderWindow::mouseReleaseEvent(QMouseEvent *e)
 void glShaderWindow::timerEvent(QTimerEvent *e)
 {
     if (userInteract) {
-        userInteract = false;
         setShader(m_shaderName);
+        userInteract = false;
         killTimer(m_timerId);
         m_timerId = 0;
         renderNow();
