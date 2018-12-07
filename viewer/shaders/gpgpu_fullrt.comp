@@ -19,6 +19,8 @@ uniform vec3 center;
 #define MAX_SCENE_BOUNDS    10.0
 #define EPS                 0.001
 
+const int MAX_TRACE = 8;
+
 float k_a = 0.05;
 float k_d = 0.5;
 vec4 C_a = vec4(0.0,0.0,0.0,1.0);
@@ -61,39 +63,11 @@ struct indirect_hit_t {
 };
 
 
-bool intersectBoundingBox(vec4 origin, vec4 dir) {
-    vec3 l1 = (bbmin - origin.xyz)/dir.xyz;
-    vec3 l2 = (bbmax - origin.xyz)/dir.xyz;
-
-    float c_min = max(max(min(l1.x, l2.x), min(l1.y, l2.y)), min(l1.z, l2.z));
-    float c_max = min(min(max(l1.x, l2.x), max(l1.y, l2.y)), max(l1.z, l2.z));
-    if (c_max < 0) {
-        return false;
-    } else if (c_min > c_max) {
-        return false;
-    }
-    return true;
-}
-
-
-
-vec4 interpolateNormal(hitinfo_t h){
-  if (h.hit_vptr == -1) {
-    return vec4(0,1,0,0);
-  }
-  else {
-    vec4 normal0 = normals[indices[h.hit_vptr]];
-    vec4 normal1 = normals[indices[h.hit_vptr+1]];
-    vec4 normal2 = normals[indices[h.hit_vptr+2]];
-    vec4 normale = h.t.w*normal0 + h.t.y*normal1 + h.t.z*normal2;
-    return normalize(normale);
-  }
-}
 
 vec4 colorFromGround(hitinfo_t h){
-  //vec2 vectorFromCenter = h.t.yw - center.xz;
-  //return texture2D(colorTexture, vec2(dot(normalize(vectorFromCenter),vec2(1,0))/M_PI, length(vectorFromCenter)/rayonPlateau));
-  return vec4(0,1,0,0);
+  vec2 vectorFromCenter = h.t.yw;
+  return texture2D(colorTexture, vec2(vectorFromCenter)/rayonPlateau);
+  //return vec4(1,1,0,0);
 }
 
 vec4 interpolateColor(hitinfo_t h)
@@ -110,6 +84,35 @@ vec4 interpolateColor(hitinfo_t h)
     return color;
   }
 }
+
+vec4 interpolateNormal(hitinfo_t h){
+  if (h.hit_vptr == -1) {
+    return vec4(0,1,0,0);
+  }
+  else {
+    vec4 normal0 = normals[indices[h.hit_vptr]];
+    vec4 normal1 = normals[indices[h.hit_vptr+1]];
+    vec4 normal2 = normals[indices[h.hit_vptr+2]];
+    vec4 normale = h.t.w*normal0 + h.t.y*normal1 + h.t.z*normal2;
+    return normalize(normale);
+  }
+}
+
+bool intersectBoundingBox(vec4 origin, vec4 dir) {
+    vec3 l1 = (bbmin - origin.xyz)/dir.xyz;
+    vec3 l2 = (bbmax - origin.xyz)/dir.xyz;
+
+    float c_min = max(max(min(l1.x, l2.x), min(l1.y, l2.y)), min(l1.z, l2.z));
+    float c_max = min(min(max(l1.x, l2.x), max(l1.y, l2.y)), max(l1.z, l2.z));
+    if (c_max < 0) {
+        return false;
+    } else if (c_min > c_max) {
+        return false;
+    }
+    return true;
+}
+
+
 
 bool intersectTriangle(vec4 origin, vec4 dir, int ptr, out vec4 dist)
 {
@@ -203,7 +206,7 @@ vec4 get_color(vec4 start, vec4 dir, hitinfo_t h){
   return color;
 }
 
-const int MAX_TRACE = 5;
+
 
 
 vec4 trace(vec4 origin, vec4 dir)
