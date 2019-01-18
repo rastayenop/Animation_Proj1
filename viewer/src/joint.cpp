@@ -15,25 +15,27 @@ Joint* Joint::createFromFile(std::string fileName) {
 
 	ifstream inputfile(fileName.data());
 	if(inputfile.good()) {
-		bool nbFrames	= FALSE;
-		bool inHierarchy = TRUE;
+		bool nbFrames	= false;
+		bool inHierarchy = true;
 		while(!inputfile.eof()) {
 			string buf;
 			inputfile >> buf;
 			// TODO : construire la structure de donn�es root � partir du fichier
-			if (buf=='MOTION'){
-				inHierarchy = FALSE;
+			if (buf=="MOTION"){
+				inHierarchy = false;
 			}
-			if (inHierarchy){
+			if (inHierarchy) {
 				// Commandes pour connaitre le tableau de dépendance #NILS
+        //std::cout << "test" << std::end;
 
 			} else {
-				// Commandes pour avoir les mouvements #PAUL(enfin j'espère)
+				/*// Commandes pour avoir les mouvements #PAUL(enfin j'espère)
+        std::cout << "test" << std::end;
 
 				if (nbFrames){
-					 int nombreDeFrames = std::stoi(buf)
+					 int nombreDeFrames = std::stoi(buf);
 				}
-				if (buf=='Frames:'){nbFrames = TRUE;}
+				if (buf=="Frames:"){nbFrames = true;}*/
 			}
 		}
 		inputfile.close();
