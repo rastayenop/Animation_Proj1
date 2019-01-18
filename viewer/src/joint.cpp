@@ -28,6 +28,64 @@ Joint* Joint::createFromFile(std::string fileName) {
 	return root;
 }
 
+void Joint::checkToken(std::string expected, std::string buf) {
+  if (expected != buf) {
+    std::cerr << "Unexpected token " << buf << "; expected " << expected;
+  }
+}
+
+Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
+  string buf;
+  ifs >> buf;
+  std::string name(buf);
+
+  ifs >> buf;
+  checkToken("{", buf);
+
+  ifs >> buf;
+  checkToken("OFFSET", buf);
+
+  ifs >> buf;
+  double offX = std::stod(buf);
+  ifs >> buf;
+  double offY = std::stod(buf);
+  ifs >> buf;
+  double offZ = std::stod(buf);
+
+  Joint* j = create(name, offX, offY, offZ, parent);
+
+  ifs >> buf;
+
+  if (buf == "CHANNELS") {
+    ifs >> buf;
+    int nbChan = std::stoi(buf);
+    int i = 0;
+    while (i < nbChan) {
+      AnimCurve ac;
+      ifs >> buf;
+      ac.name = buf;
+      j->_dofs.push_back(ac);
+      i++;
+    }
+
+    ifs >> buf;
+  }
+
+  if (buf == "End") {
+      j->_children.push_back(Joint::readChild(ifs, j));
+      ifs >> buf;
+  } else {
+    while (buf == "JOINT") {
+      j->_children.push_back(Joint::readChild(ifs, j));
+      ifs >> buf;
+    }
+  }
+
+  checkToken("}", buf);
+
+  return j;
+}
+
 void Joint::animate(int iframe) 
 {
 	// Update dofs :

@@ -38,6 +38,7 @@ public :
 	std::vector<Joint*> _children;	// children of the current joint
 
 
+
 public :
 	// Constructor :
 	Joint() {};
@@ -65,6 +66,10 @@ public :
 		}
 		return child;
 	}
+
+  static void checkToken(std::string expected, std::string buf);
+
+  static Joint* readChild(std::ifstream &ifs, Joint* parent);
 
 	// Load from file (.bvh) :	
 	static Joint* createFromFile(std::string fileName);
