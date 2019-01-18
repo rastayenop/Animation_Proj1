@@ -1,6 +1,12 @@
 #include "joint.h"
 #include <QtGui/QMatrix4x4>
 
+#include <string>
+#include <sstream>
+#include <vector>
+#include <iterator>
+
+
 using namespace std;
 
 Joint* Joint::createFromFile(std::string fileName) {
@@ -8,14 +14,27 @@ Joint* Joint::createFromFile(std::string fileName) {
 	cout << "Loading from " << fileName << endl;
 
 	ifstream inputfile(fileName.data());
-  int i = 0;
 	if(inputfile.good()) {
+		bool nbFrames	= FALSE;
+		bool inHierarchy = TRUE;
 		while(!inputfile.eof()) {
-			string buf;	
+			string buf;
 			inputfile >> buf;
-      cout << i << ": " << buf << std::endl;
-			// TODO : construire la structure de données root à partir du fichier
-      i++;
+			// TODO : construire la structure de donnï¿½es root ï¿½ partir du fichier
+			if (buf=='MOTION'){
+				inHierarchy = FALSE;
+			}
+			if (inHierarchy){
+				// Commandes pour connaitre le tableau de dÃ©pendance #NILS
+
+			} else {
+				// Commandes pour avoir les mouvements #PAUL(enfin j'espÃ¨re)
+
+				if (nbFrames){
+					 int nombreDeFrames = std::stoi(buf)
+				}
+				if (buf=='Frames:'){nbFrames = TRUE;}
+			}
 		}
 		inputfile.close();
 	} else {
@@ -27,6 +46,7 @@ Joint* Joint::createFromFile(std::string fileName) {
 
 	return root;
 }
+
 
 void Joint::checkToken(std::string expected, std::string buf) {
   if (expected != buf) {
@@ -86,8 +106,7 @@ Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
   return j;
 }
 
-void Joint::animate(int iframe) 
-{
+void Joint::animate(int iframe){
 	// Update dofs :
 	_curTx = 0; _curTy = 0; _curTz = 0;
 	_curRx = 0; _curRy = 0; _curRz = 0;
@@ -98,7 +117,7 @@ void Joint::animate(int iframe)
 		if(!_dofs[idof].name.compare("Zrotation")) _curRz = _dofs[idof]._values[iframe];
 		if(!_dofs[idof].name.compare("Yrotation")) _curRy = _dofs[idof]._values[iframe];
 		if(!_dofs[idof].name.compare("Xrotation")) _curRx = _dofs[idof]._values[iframe];
-	}	
+	}
 	// Animate children :
 	for (unsigned int ichild = 0 ; ichild < _children.size() ; ichild++) {
 		_children[ichild]->animate(iframe);

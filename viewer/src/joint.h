@@ -71,7 +71,7 @@ public :
 
   static Joint* readChild(std::ifstream &ifs, Joint* parent);
 
-	// Load from file (.bvh) :	
+	// Load from file (.bvh) :
 	static Joint* createFromFile(std::string fileName);
 
 	void animate(int iframe=0);
