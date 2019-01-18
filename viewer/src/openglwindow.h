@@ -45,6 +45,7 @@
 #include <QOpenGLFunctions_4_1_Core>
 #endif
 
+#include "joint.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -71,6 +72,13 @@ public:
     virtual void initialize();
 
     void setAnimating(bool animating);
+    bool getAnimating() { return m_animating; }
+    void toggleAnimating() {
+        m_animating = !m_animating;
+        m_update_pending = false;
+        m_root_joint = Joint::createFromFile("bvh/run1.bvh");
+        renderNow();
+    }
 
 public slots:
     void renderLater();
@@ -83,6 +91,7 @@ protected:
 private:
     bool m_update_pending;
     bool m_animating;
+    Joint* m_root_joint;
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;
