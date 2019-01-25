@@ -12,30 +12,31 @@ using namespace std;
 Joint* Joint::createFromFile(std::string fileName) {
 	Joint* root = NULL;
 	cout << "Loading from " << fileName << endl;
-
 	ifstream inputfile(fileName.data());
 	if(inputfile.good()) {
-		bool nbFrames	= false;
-		bool inHierarchy = true;
 		while(!inputfile.eof()) {
 			string buf;
 			inputfile >> buf;
 			// TODO : construire la structure de donn�es root � partir du fichier
-			if (buf=="MOTION"){
-				inHierarchy = false;
-			}
-			if (inHierarchy) {
-				// Commandes pour connaitre le tableau de dépendance #NILS
-        std::cout << "test" << std::endl;
-
-			} else {
+			if (buf=="HIERACHY") {
+				// Commandes pour connaitre le tableau de dépendance
+				inputfile >> buf;
+				Joint::checkToken("ROOT", buf);
+        root = Joint::readChild(inputfile, NULL);
+			} else if(buf=="MOTION"){
 				// Commandes pour avoir les mouvements #PAUL(enfin j'espère)
-        std::cout << "test" << std::endl;
-
-				if (nbFrames){
-					 int nombreDeFrames = std::stoi(buf);
+				inputfile >> buf;
+				Joint::checkToken("Frames:", buf);
+				inputfile >> buf;
+				int nbFrames = std::stoi(buf);
+				// La ligne des frame time dans le BVH ne nous interesse point
+				inputfile >> buf;
+				inputfile >> buf;
+				inputfile >> buf;
+				//itérations sur les mouvements
+				for (int i=0; i<nbFrames; i++){
+					Joint::readMotion(inputfile, root);
 				}
-				if (buf=="Frames:"){nbFrames = true;}
 			}
 		}
 		inputfile.close();
@@ -43,9 +44,7 @@ Joint* Joint::createFromFile(std::string fileName) {
 		std::cerr << "Failed to load the file " << fileName.data() << std::endl;
 		fflush(stdout);
 	}
-
 	cout << "file loaded" << endl;
-
 	return root;
 }
 
@@ -53,31 +52,27 @@ Joint* Joint::createFromFile(std::string fileName) {
 void Joint::checkToken(std::string expected, std::string buf) {
   if (expected != buf) {
     std::cerr << "Unexpected token " << buf << "; expected " << expected;
+		exit(1);
   }
 }
+
 
 Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
   string buf;
   ifs >> buf;
   std::string name(buf);
-
   ifs >> buf;
   checkToken("{", buf);
-
   ifs >> buf;
   checkToken("OFFSET", buf);
-
   ifs >> buf;
   double offX = std::stod(buf);
   ifs >> buf;
   double offY = std::stod(buf);
   ifs >> buf;
   double offZ = std::stod(buf);
-
   Joint* j = create(name, offX, offY, offZ, parent);
-
   ifs >> buf;
-
   if (buf == "CHANNELS") {
     ifs >> buf;
     int nbChan = std::stoi(buf);
@@ -89,10 +84,8 @@ Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
       j->_dofs.push_back(ac);
       i++;
     }
-
     ifs >> buf;
   }
-
   if (buf == "End") {
       j->_children.push_back(Joint::readChild(ifs, j));
       ifs >> buf;
@@ -102,11 +95,22 @@ Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
       ifs >> buf;
     }
   }
-
   checkToken("}", buf);
-
   return j;
 }
+
+
+void Joint::readMotion(std::ifstream &ifs, Joint* node){
+	std::string buf;
+	for(AnimCurve &animCurve : (*node)._dofs){
+		ifs >> buf;
+		animCurve._values.push_back(std::stod(buf));
+	}
+	for(Joint* child : (*node)._children){
+		Joint::readMotion(ifs, child);
+	}
+}
+
 
 void Joint::animate(int iframe){
 	// Update dofs :

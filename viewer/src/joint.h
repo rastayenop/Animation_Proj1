@@ -70,6 +70,7 @@ public :
   static void checkToken(std::string expected, std::string buf);
 
   static Joint* readChild(std::ifstream &ifs, Joint* parent);
+	static void readMotion(std::ifstream &ifs, Joint* node);
 
 	// Load from file (.bvh) :
 	static Joint* createFromFile(std::string fileName);
