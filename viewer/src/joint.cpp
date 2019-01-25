@@ -26,16 +26,16 @@ Joint* Joint::createFromFile(std::string fileName) {
 			}
 			if (inHierarchy) {
 				// Commandes pour connaitre le tableau de dépendance #NILS
-        //std::cout << "test" << std::end;
+        std::cout << "test" << std::endl;
 
 			} else {
-				/*// Commandes pour avoir les mouvements #PAUL(enfin j'espère)
-        std::cout << "test" << std::end;
+				// Commandes pour avoir les mouvements #PAUL(enfin j'espère)
+        std::cout << "test" << std::endl;
 
 				if (nbFrames){
 					 int nombreDeFrames = std::stoi(buf);
 				}
-				if (buf=="Frames:"){nbFrames = true;}*/
+				if (buf=="Frames:"){nbFrames = true;}
 			}
 		}
 		inputfile.close();
