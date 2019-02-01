@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include "glm/glm/mat4x4.hpp"
 
 class AnimCurve {
 public :
@@ -36,8 +37,7 @@ public :
 	double _curRz;						// current value of rotation about Z (deg)
 	int _rorder;						// order of euler angles to reconstruct rotation
 	std::vector<Joint*> _children;	// children of the current joint
-
-
+  glm::mat4 _transformMat;
 
 public :
 	// Constructor :
@@ -79,6 +79,9 @@ public :
 
 	// Analysis of degrees of freedom :
 	void nbDofs();
+
+  void computeState();
+  void printJoint3DPoints(std::string fileName);
 };
 
 

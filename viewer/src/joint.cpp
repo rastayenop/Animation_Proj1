@@ -1,13 +1,8 @@
 #include "joint.h"
 #include <QtGui/QMatrix4x4>
 
-#include <string>
 #include <sstream>
-#include <vector>
 #include <iterator>
-
-#include <iostream>
-
 
 using namespace std;
 
@@ -19,12 +14,12 @@ Joint* Joint::createFromFile(std::string fileName) {
     while(!inputfile.eof()) {
       string buf;
       inputfile >> buf;
-      // TODO : construire la structure de donn�es root � partir du fichier
       if (buf=="HIERARCHY") {
         // Commandes pour connaitre le tableau de dépendance
         inputfile >> buf;
         Joint::checkToken("ROOT", buf);
         root = Joint::readChild(inputfile, NULL);
+        root->printJoint3DPoints("3D_pos");
         root->nbDofs();
       } else if(buf=="MOTION"){
         if (root == NULL) {
@@ -164,4 +159,12 @@ void Joint::nbDofs() {
     _children[ichild]->nbDofs();
   }
 
+}
+
+void Joint::computeState() {
+  //
+}
+
+void Joint::printJoint3DPoints(std::string fileName) {
+  //cout <<
 }
