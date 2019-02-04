@@ -19,7 +19,8 @@ Joint* Joint::createFromFile(std::string fileName) {
         inputfile >> buf;
         Joint::checkToken("ROOT", buf);
         root = Joint::readChild(inputfile, NULL);
-        root->printJoint3DPoints("3D_pos");
+        cout << "TEST TEST TEST" << endl;
+        root->printJoint3DPoints();
         root->nbDofs();
       } else if(buf=="MOTION"){
         if (root == NULL) {
@@ -147,7 +148,6 @@ void Joint::nbDofs() {
 
   int nbDofsR = -1;
 
-  // TODO :
   cout << _name << " anims : ";
   for(AnimCurve &animCurve : _dofs) {
     cout << animCurve.name << " ";
@@ -165,6 +165,16 @@ void Joint::computeState() {
   //
 }
 
-void Joint::printJoint3DPoints(std::string fileName) {
-  //cout <<
+void Joint::printJoint3DPoints() {
+  ofstream file;
+  file.open ("skel_pos");
+  printJoin3DPointsRec(file);
+  file.close();
+}
+
+void Joint::printJoin3DPointsRec(ofstream &file) {
+  file << _name << "\n";
+  for(Joint* child : _children) {
+    child->printJoin3DPointsRec(file);
+  }
 }

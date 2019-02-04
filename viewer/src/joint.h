@@ -37,7 +37,7 @@ public :
 	double _curRz;						// current value of rotation about Z (deg)
 	int _rorder;						// order of euler angles to reconstruct rotation
 	std::vector<Joint*> _children;	// children of the current joint
-  glm::mat4 _transformMat;
+  glm::mat4 _transformation;
 
 public :
 	// Constructor :
@@ -81,7 +81,8 @@ public :
 	void nbDofs();
 
   void computeState();
-  void printJoint3DPoints(std::string fileName);
+  void printJoint3DPoints();
+  void printJoin3DPointsRec(std::ofstream &file);
 };
 
 
