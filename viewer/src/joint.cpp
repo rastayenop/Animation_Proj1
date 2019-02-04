@@ -168,13 +168,16 @@ void Joint::computeState() {
 void Joint::printJoint3DPoints() {
   ofstream file;
   file.open ("skel_pos");
-  printJoin3DPointsRec(file);
+  printJoin3DPointsRec(file, 0, 0, 0);
   file.close();
 }
 
-void Joint::printJoin3DPointsRec(ofstream &file) {
-  file << _name << "\n";
+void Joint::printJoin3DPointsRec(ofstream &file, float x, float y, float z) {
+  x += _offX;
+  y += _offY;
+  z += _offZ;
+  file << _name << " " << x << " " << y << " " << z << "\n";
   for(Joint* child : _children) {
-    child->printJoin3DPointsRec(file);
+    child->printJoin3DPointsRec(file, x, y, z);
   }
 }

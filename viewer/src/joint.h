@@ -82,7 +82,7 @@ public :
 
   void computeState();
   void printJoint3DPoints();
-  void printJoin3DPointsRec(std::ofstream &file);
+  void printJoin3DPointsRec(std::ofstream &file, float x, float y, float z);
 };
 
 
