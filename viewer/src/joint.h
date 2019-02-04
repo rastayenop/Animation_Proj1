@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-#include "glm/glm/mat4x4.hpp"
+#include "glm/glm/glm.hpp"
+#include <glm/glm/gtc/matrix_transform.hpp>
 
 class AnimCurve {
 public :
@@ -37,7 +38,7 @@ public :
 	double _curRz;						// current value of rotation about Z (deg)
 	int _rorder;						// order of euler angles to reconstruct rotation
 	std::vector<Joint*> _children;	// children of the current joint
-  glm::mat4 _transformation;
+  glm::mat4 _curMat;
 
 public :
 	// Constructor :
@@ -75,7 +76,8 @@ public :
 	// Load from file (.bvh) :
 	static Joint* createFromFile(std::string fileName);
 
-	void animate(int iframe=0);
+	void animate(Joint* parent, int iframe=0);
+	void updateMatrix(Joint* parent);
 
 	// Analysis of degrees of freedom :
 	void nbDofs();

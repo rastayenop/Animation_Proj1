@@ -122,7 +122,7 @@ void Joint::readMotion(std::ifstream &ifs, Joint* node){
 }
 
 
-void Joint::animate(int iframe){
+void Joint::animate(Joint* parent, int iframe){
   // Update dofs :
   _curTx = 0; _curTy = 0; _curTz = 0;
   _curRx = 0; _curRy = 0; _curRz = 0;
@@ -134,20 +134,33 @@ void Joint::animate(int iframe){
     if(!_dofs[idof].name.compare("Yrotation")) _curRy = _dofs[idof]._values[iframe];
     if(!_dofs[idof].name.compare("Xrotation")) _curRx = _dofs[idof]._values[iframe];
   }
+  updateMatrix(parent);
   // Animate children :
   for (unsigned int ichild = 0 ; ichild < _children.size() ; ichild++) {
-    _children[ichild]->animate(iframe);
+    _children[ichild]->animate(this, iframe);
   }
+}
+
+
+void Joint::updateMatrix(Joint* parent){
+  glm::mat4 previous(this->_curMat);
+  glm::mat4 rotationParent;
+  glm::mat4 localTransform;
+  rotationParent = glm::mat4(1.0);
+  if(parent!=NULL){
+    rotationParent = parent->_curMat;
+  }
+  localTransform = glm::translate(glm::mat4(), glm::vec3(_curTx, _curTy, _curTz));/* * glm::rotate(_curRx, 1., 0., 0.);/* *
+      glm::rotate(_curRy, 0, 1, 0) *
+      glm::rotate(_curRz, 0, 0, 1) * */
+  _curMat = rotationParent * localTransform * previous;
 }
 
 
 void Joint::nbDofs() {
   if (_dofs.empty()) return;
-
   double tol = 1e-4;
-
   int nbDofsR = -1;
-
   cout << _name << " anims : ";
   for(AnimCurve &animCurve : _dofs) {
     cout << animCurve.name << " ";
@@ -162,7 +175,8 @@ void Joint::nbDofs() {
 }
 
 void Joint::computeState() {
-  //
+  //TODO
+  // calculer les matrice de rotation
 }
 
 void Joint::printJoint3DPoints() {
