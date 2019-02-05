@@ -76,7 +76,9 @@ public:
     void toggleAnimating() {
         m_animating = !m_animating;
         m_update_pending = false;
-        m_root_joint = Joint::createFromFile("bvh/run1.bvh");
+        if (m_root_joint == 0) {
+            m_root_joint = Joint::createFromFile("bvh/run1.bvh");
+        }
         renderNow();
     }
 

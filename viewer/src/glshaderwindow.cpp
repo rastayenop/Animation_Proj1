@@ -22,15 +22,16 @@
 glShaderWindow::glShaderWindow(QWindow *parent)
 // Initialize obvious default values here (e.g. 0 for pointers)
     : OpenGLWindow(parent), modelMesh(0),
-      m_program(0), ground_program(0), compute_program(0), shadowMapGenerationProgram(0),
+      m_program(0), ground_program(0), joint_program(0), compute_program(0), shadowMapGenerationProgram(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
+      j_vertices(0), j_colors(0), j_indices(0),
       gpgpu_vertices(0), gpgpu_normals(0), gpgpu_texcoords(0), gpgpu_colors(0), gpgpu_indices(0),
       environmentMap(0), texture(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
       isGPGPU(false), hasComputeShaders(false), blinnPhong(true), transparent(true), eta(1.5), lightIntensity(1.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
       userInteract(false),
       shadowMap_fboId(0), shadowMap_rboId(0), shadowMap_textureId(0), fullScreenSnapshots(false), computeResult(0), 
       m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer),
-      m_timerId(0), m_shaderName("1_simple")
+      joint_indexBuffer(QOpenGLBuffer::IndexBuffer), m_timerId(0), m_shaderName("1_simple")
 {
     // Default values you might want to tinker with
     shadowMapDimension = 2048;
@@ -53,6 +54,10 @@ glShaderWindow::~glShaderWindow()
     if (ground_program) {
         ground_program->release();
         delete ground_program;
+    }
+    if (joint_program) {
+        joint_program->release();
+        delete joint_program;
     }
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
@@ -94,6 +99,19 @@ glShaderWindow::~glShaderWindow()
     if (g_colors) delete [] g_colors;
     if (g_normals) delete [] g_normals;
     if (g_indices) delete [] g_indices;
+
+    joint_vertexBuffer.release();
+    joint_vertexBuffer.destroy();
+    joint_indexBuffer.release();
+    joint_indexBuffer.destroy();
+    joint_colorBuffer.release();
+    joint_colorBuffer.destroy();
+    joint_vao.release();
+    joint_vao.destroy();
+    if (j_vertices) delete [] j_vertices;
+    if (j_colors) delete [] j_colors;
+    if (j_indices) delete [] j_indices;
+
     if (gpgpu_vertices) delete [] gpgpu_vertices;
     if (gpgpu_colors) delete [] gpgpu_colors;
     if (gpgpu_normals) delete [] gpgpu_normals;
@@ -530,6 +548,38 @@ void glShaderWindow::bindSceneToProgram()
     shadowMapGenerationProgram->enableAttributeArray( "texcoords" );
     ground_program->release();
     ground_vao.release();
+
+    joint_vao.bind();
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+
+    //todo : create vertices
+    j_numPoints = 0;
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+    joint_colorBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_colorBuffer.bind();
+    joint_colorBuffer.allocate(j_colors, j_numPoints * sizeof(trimesh::point));
+
+    //todo : create joint indices
+    j_numIndices = 0;
+    joint_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_indexBuffer.bind();
+    joint_indexBuffer.allocate(j_indices, j_numIndices * sizeof(int));
+
+    joint_program->bind();
+    joint_vertexBuffer.bind();
+    joint_program->setAttributeBuffer( "vertex", GL_FLOAT, 0, 4 );
+    joint_program->enableAttributeArray( "vertex" );
+    joint_colorBuffer.bind();
+    joint_program->setAttributeBuffer( "color", GL_FLOAT, 0, 4 );
+    joint_program->enableAttributeArray( "color" );
+    joint_program->release();
+
+    joint_vao.release();
 }
 
 void glShaderWindow::initializeTransformForScene()
@@ -833,6 +883,13 @@ void glShaderWindow::initialize()
         delete(ground_program);
     }
     ground_program = prepareShaderProgram(shaderPath + "3_textured.vert", shaderPath + "3_textured.frag");
+
+    if (joint_program) {
+        joint_program->release();
+        delete(joint_program);
+    }
+    joint_program = prepareShaderProgram(shaderPath + "1_simple.vert", shaderPath + "1_simple.frag");
+
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
@@ -861,6 +918,14 @@ void glShaderWindow::initialize()
     ground_normalBuffer.create();
     ground_texcoordBuffer.create();
     ground_vao.release();
+
+    joint_vao.create();
+    joint_vao.bind();
+    joint_vertexBuffer.create();
+    joint_indexBuffer.create();
+    joint_colorBuffer.create();
+    joint_vao.release();
+
     openScene();
 }
 
@@ -1149,6 +1214,10 @@ void glShaderWindow::render()
         ground_vao.bind();
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
+        joint_vao.bind();
+        // todo : draw lines
+        glDrawElements(GL_TRIANGLES, j_numIndices, GL_UNSIGNED_INT, 0);
+        joint_vao.release();
         glFinish();
         // done. Back to normal drawing.
         shadowMapGenerationProgram->release();
@@ -1219,5 +1288,28 @@ void glShaderWindow::render()
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
         ground_program->release();
+
+        // also draw the joint, with a different shader program
+        joint_program->bind();
+        joint_program->setUniformValue("lightPosition", lightPosition);
+        joint_program->setUniformValue("matrix", m_matrix[0]);
+        joint_program->setUniformValue("lightMatrix", m_matrix[1]);
+        joint_program->setUniformValue("perspective", m_perspective);
+        joint_program->setUniformValue("normalMatrix", m_matrix[0].normalMatrix());
+        joint_program->setUniformValue("lightIntensity", 1.0f);
+        joint_program->setUniformValue("blinnPhong", blinnPhong);
+        joint_program->setUniformValue("transparent", transparent);
+        joint_program->setUniformValue("lightIntensity", lightIntensity);
+        joint_program->setUniformValue("shininess", shininess);
+        joint_program->setUniformValue("eta", eta);
+        joint_program->setUniformValue("radius", modelMesh->bsphere.r);
+		if (joint_program->uniformLocation("colorTexture") != -1) joint_program->setUniformValue("colorTexture", 0);
+        if (joint_program->uniformLocation("shadowMap") != -1) {
+            joint_program->setUniformValue("shadowMap", 2);
+        }
+        joint_vao.bind();
+        glDrawElements(GL_TRIANGLES, j_numIndices, GL_UNSIGNED_INT, 0);
+        joint_vao.release();
+        joint_program->release();
     }
 }
