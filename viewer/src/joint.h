@@ -11,6 +11,9 @@
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtx/euler_angles.hpp>
 #include "TriMesh.h"
+#include <QMatrix4x4>
+#include <QVector3D>
+
 
 class AnimCurve {
 public :
@@ -41,7 +44,7 @@ public :
 	double _curRz;						// current value of rotation about Z (deg)
 	int _rorder;						// order of euler angles to reconstruct rotation
 	std::vector<Joint*> _children;	// children of the current joint
-  glm::mat4 _curMat;
+  QMatrix4x4 _curMat;
   int _glIdentifier;
   static int glIdCounter;
 
@@ -69,14 +72,16 @@ public :
 		child->_curRz = 0;
 		if(parent != NULL) {
 			parent->_children.push_back(child);
-			glm::mat4 makeMatrix = glm::mat4(0.0);
-			makeMatrix[3] = glm::vec4(offX, offY, offZ, 0.);
-			child->_curMat = parent->_curMat + glm::transpose(makeMatrix);
+			QMatrix4x4 makeMatrix;
+			makeMatrix.setToIdentity();
+			makeMatrix.translate(offX,offY,offZ);
+			child->_curMat = parent->_curMat + makeMatrix;
 		}
 		else{
-			glm::mat4 makeMatrix = glm::mat4(1.0);
-			makeMatrix[3] = glm::vec4(offX, offY, offZ, 1.);
-			child->_curMat = glm::transpose(makeMatrix);
+			QMatrix4x4 makeMatrix;
+			makeMatrix.setToIdentity();
+			makeMatrix.translate(offX, offY, offZ);
+			child->_curMat = makeMatrix;
 		}
 
 		return child;

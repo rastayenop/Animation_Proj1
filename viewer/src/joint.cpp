@@ -144,15 +144,19 @@ void Joint::animate(Joint* parent, int iframe){
 
 
 void Joint::updateMatrix(Joint* parent){
-  glm::mat4 rotationParent(glm::mat4(1.0));
-  glm::mat4 localTransform(glm::transpose(glm::yawPitchRoll(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
+  QMatrix4x4 localTransform;
+  localTransform.setToIdentity();
+  localTransform.rotate(_curRz, 0, 0, 1);
+  localTransform.rotate(_curRy, 0, 1, 0);
+  localTransform.rotate(_curRx, 1, 0, 0);
   if(parent!=NULL){
-    rotationParent = parent->_curMat;
-    localTransform[3] = glm::vec4(this->_offX, this->_offY, this->_offZ, 1.0);
+    QMatrix4x4 rotationParent = parent->_curMat;
+    localTransform.translate(this->_offX, this->_offY, this->_offZ);
+    this->_curMat = rotationParent * localTransform;
   }else {
-    localTransform[3] = glm::vec4(this->_curTx, this->_curTy, this->_curTz, 1.0);
+    localTransform.translate(this->_curTx, this->_curTy, this->_curTz);
+    this->_curMat = localTransform;
   }
-  this->_curMat = glm::transpose(localTransform) * rotationParent;
 }
 
 
@@ -189,7 +193,12 @@ void Joint::initGLIdsRec() {
 
 void Joint::setVertices(trimesh::point *vertices, int iframe, Joint* parent) {
   this->animate(parent, iframe);
-  vertices[_glIdentifier] = trimesh::point(_curMat[0][3], _curMat[1][3], _curMat[2][3], 1);
+  QVector3D position;
+  position = _curMat * QVector3D(0,0,0);
+  float x = float(position.x());
+  float y = float(position.y());
+  float z = float(position.z());
+  vertices[_glIdentifier] = trimesh::point(x, y, z, 1);
   for(Joint* child : _children) {
     child->setVertices(vertices, iframe, this);
   }
