@@ -99,6 +99,12 @@ private:
     int *g_indices;
     int g_numPoints;
     int g_numIndices;
+    // Joint
+    trimesh::point *j_vertices;
+    trimesh::point *j_colors;
+    int *j_indices;
+    int j_numPoints;
+    int j_numIndices;
     // GPGPU
     trimesh::point *gpgpu_vertices;
     trimesh::vec *gpgpu_normals;
@@ -125,6 +131,7 @@ private:
     // OpenGL variables encapsulated by Qt
     QOpenGLShaderProgram *m_program;
     QOpenGLShaderProgram *ground_program;
+    QOpenGLShaderProgram *joint_program;
     QOpenGLShaderProgram *compute_program;
     QOpenGLShaderProgram *shadowMapGenerationProgram;
     QOpenGLTexture* environmentMap;
@@ -149,6 +156,11 @@ private:
     QOpenGLBuffer ground_normalBuffer;
     QOpenGLBuffer ground_colorBuffer;
     QOpenGLBuffer ground_texcoordBuffer;
+    // Joint
+    QOpenGLVertexArrayObject joint_vao;
+    QOpenGLBuffer joint_vertexBuffer;
+    QOpenGLBuffer joint_indexBuffer;
+    QOpenGLBuffer joint_colorBuffer;
     // Matrix for all objects
     QMatrix4x4 m_matrix[3]; // 0 = object, 1 = light, 2 = ground
     QMatrix4x4 m_perspective;
