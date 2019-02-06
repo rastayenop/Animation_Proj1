@@ -49,7 +49,6 @@ Joint* Joint::createFromFile(std::string fileName) {
     fflush(stdout);
   }
   cout << "file loaded" << endl;
-  root->printJoint3DPoints();
   cout << root->initalizeGLIds() << endl;
   return root;
 }
@@ -146,7 +145,7 @@ void Joint::animate(Joint* parent, int iframe){
 
 void Joint::updateMatrix(Joint* parent){
   glm::mat4 rotationParent(glm::mat4(1.0));
-  glm::mat4 localTransform(glm::transpose(glm::yowPitchRoll(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
+  glm::mat4 localTransform(glm::transpose(glm::yawPitchRoll(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
   if(parent!=NULL){
     rotationParent = parent->_curMat;
     localTransform[3] = glm::vec4(this->_offX, this->_offY, this->_offZ, 1.0);
@@ -173,39 +172,6 @@ void Joint::nbDofs() {
 }
 
 
-void Joint::printJoint3DPoints() {
-  ofstream file;
-  file.open ("skel_pos3");
-  printJoin3DPointsRec(file, 0, 0, 0);
-  file.close();
-}
-
-
-void Joint::printJoin3DPointsRec(ofstream &file, float x, float y, float z, Joint* parent) {
-  glm::vec4 base = glm::vec4(x, y, z, 1.0);
-  int iframe = 3;
-  this->animate(parent, iframe);
-  glm::vec4 position = base * this->_curMat;
-  file << _name << " ";
-  for (int i=0; i<4; i++){
-    file << position[i] << " ";
-  }
-  file << "\n";
-  for(Joint* child : _children) {
-    child->printJoin3DPointsRec(file, x, y, z, this);
-  }
-}
-
-void Joint::_printJoin3DPointsRec(ofstream &file, float x, float y, float z) {
-  x += _offX;
-  y += _offY;
-  z += _offZ;
-  file << _name << " " << x << " " << y << " " << z << "\n";
-  for(Joint* child : _children) {
-    child->_printJoin3DPointsRec(file, x, y, z);
-  }
-}
-
 int Joint::initalizeGLIds() {
   Joint::glIdCounter = 0;
   initGLIdsRec();
@@ -221,13 +187,11 @@ void Joint::initGLIdsRec() {
   }
 }
 
-void Joint::setVertices(trimesh::point *vertices, float x, float y, float z) {
-  x += _offX;
-  y += _offY;
-  z += _offZ;
-  vertices[_glIdentifier] = trimesh::point(x, y, z, 1);
+void Joint::setVertices(trimesh::point *vertices, int iframe, Joint* parent) {
+  this->animate(parent, iframe);
+  vertices[_glIdentifier] = trimesh::point(_curMat[0][3], _curMat[1][3], _curMat[2][3], 1);
   for(Joint* child : _children) {
-    child->setVertices(vertices, x, y, z);
+    child->setVertices(vertices, iframe, this);
   }
 }
 
