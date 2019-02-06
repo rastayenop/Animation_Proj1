@@ -1,5 +1,6 @@
 #ifndef _JOINT_H_
 #define _JOINT_H_
+#define GLM_ENABLE_EXPERIMENTAL
 
 #include <string>
 #include <vector>
@@ -8,6 +9,7 @@
 #include <fstream>
 #include "glm/glm/glm.hpp"
 #include <glm/glm/gtc/matrix_transform.hpp>
+#include <glm/glm/gtx/euler_angles.hpp>
 
 class AnimCurve {
 public :
@@ -64,7 +66,16 @@ public :
 		child->_curRz = 0;
 		if(parent != NULL) {
 			parent->_children.push_back(child);
+			glm::mat4 makeMatrix = glm::mat4(0.0);
+			makeMatrix[3] = glm::vec4(offX, offY, offZ, 0.);
+			child->_curMat = parent->_curMat + glm::transpose(makeMatrix);
 		}
+		else{
+			glm::mat4 makeMatrix = glm::mat4(1.0);
+			makeMatrix[3] = glm::vec4(offX, offY, offZ, 1.);
+			child->_curMat = glm::transpose(makeMatrix);
+		}
+
 		return child;
 	}
 
@@ -77,14 +88,13 @@ public :
 	static Joint* createFromFile(std::string fileName);
 
 	void animate(Joint* parent, int iframe=0);
-	void updateMatrix(Joint* parent);
+	void updateMatrix(Joint* parent	);
 
 	// Analysis of degrees of freedom :
 	void nbDofs();
 
-  void computeState();
   void printJoint3DPoints();
-  void printJoin3DPointsRec(std::ofstream &file, float x, float y, float z);
+  void printJoin3DPointsRec(std::ofstream &file, float x, float y, float z, Joint* parent	= NULL);
 };
 
 

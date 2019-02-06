@@ -19,15 +19,12 @@ Joint* Joint::createFromFile(std::string fileName) {
         inputfile >> buf;
         Joint::checkToken("ROOT", buf);
         root = Joint::readChild(inputfile, NULL);
-        cout << "TEST TEST TEST" << endl;
-        root->printJoint3DPoints();
         root->nbDofs();
       } else if(buf=="MOTION"){
         if (root == NULL) {
           std::cerr << "root == NULL" << std::endl;
           exit(1);
         }
-        // Commandes pour avoir les mouvements #PAUL(enfin j'espère)
         inputfile >> buf;
         Joint::checkToken("Frames:", buf);
         inputfile >> buf;
@@ -49,6 +46,7 @@ Joint* Joint::createFromFile(std::string fileName) {
     fflush(stdout);
   }
   cout << "file loaded" << endl;
+  root->printJoint3DPoints();
   return root;
 }
 
@@ -134,7 +132,7 @@ void Joint::animate(Joint* parent, int iframe){
     if(!_dofs[idof].name.compare("Yrotation")) _curRy = _dofs[idof]._values[iframe];
     if(!_dofs[idof].name.compare("Xrotation")) _curRx = _dofs[idof]._values[iframe];
   }
-  updateMatrix(parent);
+  this->updateMatrix(parent);
   // Animate children :
   for (unsigned int ichild = 0 ; ichild < _children.size() ; ichild++) {
     _children[ichild]->animate(this, iframe);
@@ -143,17 +141,15 @@ void Joint::animate(Joint* parent, int iframe){
 
 
 void Joint::updateMatrix(Joint* parent){
-  glm::mat4 previous(this->_curMat);
-  glm::mat4 rotationParent;
-  glm::mat4 localTransform;
-  rotationParent = glm::mat4(1.0);
+  glm::mat4 rotationParent(glm::mat4(1.0));
+  glm::mat4 localTransform(glm::transpose(glm::eulerAngleYXZ(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
   if(parent!=NULL){
     rotationParent = parent->_curMat;
+    localTransform[3] = glm::vec4(this->_offX, this->_offY, this->_offZ, 1.0);
+  }else {
+    localTransform[3] = glm::vec4(this->_curTx, this->_curTy, this->_curTz, 1.0);
   }
-  localTransform = glm::translate(glm::mat4(), glm::vec3(_curTx, _curTy, _curTz));/* * glm::rotate(_curRx, 1., 0., 0.);/* *
-      glm::rotate(_curRy, 0, 1, 0) *
-      glm::rotate(_curRz, 0, 0, 1) * */
-  _curMat = rotationParent * localTransform * previous;
+  this->_curMat = glm::transpose(localTransform) * rotationParent;
 }
 
 
@@ -166,32 +162,32 @@ void Joint::nbDofs() {
     cout << animCurve.name << " ";
   }
   cout << endl;
-
   // Propagate to children :
   for (unsigned int ichild = 0 ; ichild < _children.size() ; ichild++) {
     _children[ichild]->nbDofs();
   }
-
 }
 
-void Joint::computeState() {
-  //TODO
-  // calculer les matrice de rotation
-}
 
 void Joint::printJoint3DPoints() {
   ofstream file;
-  file.open ("skel_pos");
+  file.open ("skel_pos3");
   printJoin3DPointsRec(file, 0, 0, 0);
   file.close();
 }
 
-void Joint::printJoin3DPointsRec(ofstream &file, float x, float y, float z) {
-  x += _offX;
-  y += _offY;
-  z += _offZ;
-  file << _name << " " << x << " " << y << " " << z << "\n";
+
+void Joint::printJoin3DPointsRec(ofstream &file, float x, float y, float z, Joint* parent) {
+  glm::vec4 base = glm::vec4(x, y, z, 1.0);
+  int iframe = 3;
+  this->animate(parent, iframe);
+  glm::vec4 position = base * this->_curMat;
+  file << _name << " ";
+  for (int i=0; i<4; i++){
+    file << position[i] << " ";
+  }
+  file << "\n";
   for(Joint* child : _children) {
-    child->printJoin3DPointsRec(file, x, y, z);
+    child->printJoin3DPointsRec(file, x, y, z, this);
   }
 }
