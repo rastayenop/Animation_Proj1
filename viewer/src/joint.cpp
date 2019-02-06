@@ -146,7 +146,7 @@ void Joint::animate(Joint* parent, int iframe){
 
 void Joint::updateMatrix(Joint* parent){
   glm::mat4 rotationParent(glm::mat4(1.0));
-  glm::mat4 localTransform(glm::transpose(glm::eulerAngleYXZ(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
+  glm::mat4 localTransform(glm::transpose(glm::yowPitchRoll(glm::radians(_curRy), glm::radians(_curRx), glm::radians(_curRz))));
   if(parent!=NULL){
     rotationParent = parent->_curMat;
     localTransform[3] = glm::vec4(this->_offX, this->_offY, this->_offZ, 1.0);

@@ -96,8 +96,6 @@ public :
 	// Analysis of degrees of freedom :
 	void nbDofs();
 
-  void printJoint3DPoints();
-  void _printJoin3DPointsRec(std::ofstream &file, float x, float y, float z);
 
   int initalizeGLIds();
   void initGLIdsRec();
