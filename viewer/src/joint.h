@@ -102,7 +102,7 @@ public :
   int initalizeGLIds();
   void initGLIdsRec();
 
-  void setVertices(trimesh::point *vertices);
+  void setVertices(trimesh::point *vertices, float x = 0, float y = 0, float z = 0);
   void setIndices(int *indices);
   void _setIndicesRec(int *indices, int &index);
 };

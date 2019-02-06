@@ -221,10 +221,13 @@ void Joint::initGLIdsRec() {
   }
 }
 
-void Joint::setVertices(trimesh::point *vertices) {
-  vertices[_glIdentifier] = trimesh::point(_offX, _offY, _offZ, 1);
+void Joint::setVertices(trimesh::point *vertices, float x, float y, float z) {
+  x += _offX;
+  y += _offY;
+  z += _offZ;
+  vertices[_glIdentifier] = trimesh::point(x, y, z, 1);
   for(Joint* child : _children) {
-    child->setVertices(vertices);
+    child->setVertices(vertices, x, y, z);
   }
 }
 

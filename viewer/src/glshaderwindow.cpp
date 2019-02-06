@@ -478,7 +478,7 @@ void glShaderWindow::bindSceneToProgram()
       }
 
 
-      for (int i = 0; i < j_numPoints; i++) {
+      /*for (int i = 0; i < j_numPoints; i++) {
         std::cout << "v[" << i << "] = "
           << " " << j_vertices[i][0]
           << " " << j_vertices[i][1]
@@ -486,11 +486,27 @@ void glShaderWindow::bindSceneToProgram()
       }
       for (int i = 0; i < j_numPoints - 1; i++) {
         std::cout << "(" << j_indices[2*i] << ", " << j_indices[2*i + 1] << ")" << std::endl;
-      }
+      }*/
 
+      m_root_joint->_offX = 0;
+      m_root_joint->_offY = 0;
+      m_root_joint->_offZ = 0;
       m_root_joint->setVertices(j_vertices);
       m_root_joint->setIndices(j_indices);
     }
+
+    /*j_vertices = new trimesh::point[2];
+    j_colors = new trimesh::point[2];
+    j_indices = new int[2];
+    j_numPoints = 2;
+    j_numIndices = 2;
+
+    j_vertices[0] = trimesh::point(0, 0, 0, 1);
+    j_vertices[1] = trimesh::point(100, 100, 100, 1);
+    j_colors[0] = trimesh::point(0.8, 0.2, 0.2, 1);
+    j_colors[1] = trimesh::point(0.8, 0.2, 0.2, 1);
+    j_indices[0] = 0;
+    j_indices[1] = 1;*/
 
     joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     joint_vertexBuffer.bind();
@@ -1234,10 +1250,10 @@ void glShaderWindow::render()
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
         // Draw the entire scene:
         m_vao.bind();
-        glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
         m_vao.release();
         ground_vao.bind();
-        glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
         joint_vao.bind();
         glDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
@@ -1310,7 +1326,8 @@ void glShaderWindow::render()
             // TODO_shadowMapping: send the right transform here
         }
         ground_vao.bind();
-        glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        //glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         ground_vao.release();
         ground_program->release();
 
@@ -1328,10 +1345,7 @@ void glShaderWindow::render()
         joint_program->setUniformValue("shininess", shininess);
         joint_program->setUniformValue("eta", eta);
         joint_program->setUniformValue("radius", modelMesh->bsphere.r);
-		if (joint_program->uniformLocation("colorTexture") != -1) joint_program->setUniformValue("colorTexture", 0);
-        if (joint_program->uniformLocation("shadowMap") != -1) {
-            joint_program->setUniformValue("shadowMap", 2);
-        }
+		//if (joint_program->uniformLocation("colorTexture") != -1) joint_program->setUniformValue("colorTexture", 0);
         joint_vao.bind();
         glDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
         joint_vao.release();
