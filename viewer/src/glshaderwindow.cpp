@@ -16,6 +16,7 @@
 #include <QComboBox>
 #include <QDebug>
 #include <assert.h>
+#include <iostream>
 
 #include "perlinNoise.h" // defines tables for Perlin Noise
 
@@ -457,6 +458,62 @@ void glShaderWindow::bindSceneToProgram()
     shadowMapGenerationProgram->release();
     m_vao.release();
 
+    joint_vao.bind();
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+
+    j_numIndices = 0;
+    j_numPoints = Joint::glIdCounter;
+    if (j_numPoints > 0) {
+      j_numIndices = 0;
+
+      if (j_vertices == 0) j_vertices = new trimesh::point[j_numPoints];
+      if (j_colors == 0) j_colors = new trimesh::point[j_numPoints];
+      j_numIndices = 2*(j_numPoints-1);
+      if (j_indices == 0) j_indices = new int[j_numIndices];
+
+      for (int i = 0; i < j_numPoints; i++) {
+        j_colors[i] = trimesh::point(0.8, 0.2, 0.2, 1);
+      }
+
+
+      for (int i = 0; i < j_numPoints; i++) {
+        std::cout << "v[" << i << "] = "
+          << " " << j_vertices[i][0]
+          << " " << j_vertices[i][1]
+          << " " << j_vertices[i][2] << std::endl;
+      }
+      for (int i = 0; i < j_numPoints - 1; i++) {
+        std::cout << "(" << j_indices[2*i] << ", " << j_indices[2*i + 1] << ")" << std::endl;
+      }
+
+      m_root_joint->setVertices(j_vertices);
+      m_root_joint->setIndices(j_indices);
+    }
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+    joint_colorBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_colorBuffer.bind();
+    joint_colorBuffer.allocate(j_colors, j_numPoints * sizeof(trimesh::point));
+
+    joint_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_indexBuffer.bind();
+    joint_indexBuffer.allocate(j_indices, j_numIndices * sizeof(int));
+
+    joint_program->bind();
+    joint_vertexBuffer.bind();
+    joint_program->setAttributeBuffer( "vertex", GL_FLOAT, 0, 4 );
+    joint_program->enableAttributeArray( "vertex" );
+    joint_colorBuffer.bind();
+    joint_program->setAttributeBuffer( "color", GL_FLOAT, 0, 4 );
+    joint_program->enableAttributeArray( "color" );
+    joint_program->release();
+
+    joint_vao.release();
+
     // Bind ground VAO to ground program as well
     // We create a VAO for the ground from scratch
     ground_vao.bind();
@@ -548,38 +605,6 @@ void glShaderWindow::bindSceneToProgram()
     shadowMapGenerationProgram->enableAttributeArray( "texcoords" );
     ground_program->release();
     ground_vao.release();
-
-    joint_vao.bind();
-
-    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_vertexBuffer.bind();
-
-    //todo : create vertices
-    j_numPoints = 0;
-
-    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_vertexBuffer.bind();
-    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
-    joint_colorBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_colorBuffer.bind();
-    joint_colorBuffer.allocate(j_colors, j_numPoints * sizeof(trimesh::point));
-
-    //todo : create joint indices
-    j_numIndices = 0;
-    joint_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_indexBuffer.bind();
-    joint_indexBuffer.allocate(j_indices, j_numIndices * sizeof(int));
-
-    joint_program->bind();
-    joint_vertexBuffer.bind();
-    joint_program->setAttributeBuffer( "vertex", GL_FLOAT, 0, 4 );
-    joint_program->enableAttributeArray( "vertex" );
-    joint_colorBuffer.bind();
-    joint_program->setAttributeBuffer( "color", GL_FLOAT, 0, 4 );
-    joint_program->enableAttributeArray( "color" );
-    joint_program->release();
-
-    joint_vao.release();
 }
 
 void glShaderWindow::initializeTransformForScene()
@@ -1215,8 +1240,7 @@ void glShaderWindow::render()
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
         joint_vao.bind();
-        // todo : draw lines
-        glDrawElements(GL_TRIANGLES, j_numIndices, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
         joint_vao.release();
         glFinish();
         // done. Back to normal drawing.
@@ -1260,7 +1284,8 @@ void glShaderWindow::render()
     }
 
     m_vao.bind();
-    glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+    // TODO : décommenter pour TP2
+    //glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
     m_vao.release();
     m_program->release();
 
@@ -1308,7 +1333,7 @@ void glShaderWindow::render()
             joint_program->setUniformValue("shadowMap", 2);
         }
         joint_vao.bind();
-        glDrawElements(GL_TRIANGLES, j_numIndices, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
         joint_vao.release();
         joint_program->release();
     }

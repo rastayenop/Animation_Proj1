@@ -89,11 +89,11 @@ public slots:
 protected:
     bool event(QEvent *event);
     void exposeEvent(QExposeEvent *event);
+    Joint* m_root_joint;
 
 private:
     bool m_update_pending;
     bool m_animating;
-    Joint* m_root_joint;
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;
