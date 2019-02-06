@@ -6,6 +6,9 @@
 
 using namespace std;
 
+int Joint::glIdCounter = 0;
+
+
 Joint* Joint::createFromFile(std::string fileName) {
   Joint* root = NULL;
   cout << "Loading from " << fileName << endl;
@@ -47,6 +50,7 @@ Joint* Joint::createFromFile(std::string fileName) {
   }
   cout << "file loaded" << endl;
   root->printJoint3DPoints();
+  cout << root->initalizeGLIds() << endl;
   return root;
 }
 
@@ -189,5 +193,52 @@ void Joint::printJoin3DPointsRec(ofstream &file, float x, float y, float z, Join
   file << "\n";
   for(Joint* child : _children) {
     child->printJoin3DPointsRec(file, x, y, z, this);
+  }
+}
+
+void Joint::_printJoin3DPointsRec(ofstream &file, float x, float y, float z) {
+  x += _offX;
+  y += _offY;
+  z += _offZ;
+  file << _name << " " << x << " " << y << " " << z << "\n";
+  for(Joint* child : _children) {
+    child->_printJoin3DPointsRec(file, x, y, z);
+  }
+}
+
+int Joint::initalizeGLIds() {
+  Joint::glIdCounter = 0;
+  initGLIdsRec();
+  return Joint::glIdCounter;
+}
+
+void Joint::initGLIdsRec() {
+  _glIdentifier = Joint::glIdCounter;
+  //std::cout << _name << " id = " << _glIdentifier << endl;
+  Joint::glIdCounter++;
+  for(Joint* child : _children) {
+    child->initGLIdsRec();
+  }
+}
+
+void Joint::setVertices(trimesh::point *vertices) {
+  vertices[_glIdentifier] = trimesh::point(_offX, _offY, _offZ, 1);
+  for(Joint* child : _children) {
+    child->setVertices(vertices);
+  }
+}
+
+void Joint::setIndices(int *indices) {
+  int index = 0;
+  _setIndicesRec(indices, index);
+}
+
+void Joint::_setIndicesRec(int *indices, int &index) {
+  for(Joint* child : _children) {
+    indices[index] = _glIdentifier;
+    index++;
+    indices[index] = child->_glIdentifier;
+    index++;
+    child->_setIndicesRec(indices, index);
   }
 }

@@ -10,6 +10,7 @@
 #include "glm/glm/glm.hpp"
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtx/euler_angles.hpp>
+#include "TriMesh.h"
 
 class AnimCurve {
 public :
@@ -41,6 +42,8 @@ public :
 	int _rorder;						// order of euler angles to reconstruct rotation
 	std::vector<Joint*> _children;	// children of the current joint
   glm::mat4 _curMat;
+  int _glIdentifier;
+  static int glIdCounter;
 
 public :
 	// Constructor :
@@ -94,7 +97,14 @@ public :
 	void nbDofs();
 
   void printJoint3DPoints();
-  void printJoin3DPointsRec(std::ofstream &file, float x, float y, float z, Joint* parent	= NULL);
+  void _printJoin3DPointsRec(std::ofstream &file, float x, float y, float z);
+
+  int initalizeGLIds();
+  void initGLIdsRec();
+
+  void setVertices(trimesh::point *vertices);
+  void setIndices(int *indices);
+  void _setIndicesRec(int *indices, int &index);
 };
 
 
