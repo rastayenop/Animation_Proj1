@@ -91,6 +91,7 @@ private:
     QString  textureName;
     QString  envMapName;
     trimesh::TriMesh* modelMesh;
+    std::vector<trimesh::point> m_originSkinVertices;
     uchar* pixels;
     // Ground
     trimesh::point *g_vertices;

@@ -45,25 +45,6 @@ glShaderWindow::glShaderWindow(QWindow *parent)
     m_compShaderSuffix << "*.comp" << "*.cs";
 }
 
-void glShaderWindow::updateVerticesPosition() {
-    if (m_root_joint == NULL
-        || j_vertices == NULL
-        || m_current_animation_frame == 0) {
-        return;
-    }
-    joint_vao.bind();
-
-    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_vertexBuffer.bind();
-    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
-    m_root_joint->setVertices(j_vertices, m_current_animation_frame);
-    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    joint_vertexBuffer.bind();
-    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
-
-    joint_vao.release();
-}
-
 glShaderWindow::~glShaderWindow()
 {
     if (modelMesh) delete modelMesh;
@@ -136,6 +117,42 @@ glShaderWindow::~glShaderWindow()
     if (gpgpu_colors) delete [] gpgpu_colors;
     if (gpgpu_normals) delete [] gpgpu_normals;
     if (gpgpu_indices) delete [] gpgpu_indices;
+}
+
+void glShaderWindow::updateVerticesPosition() {
+    if (m_root_joint == NULL
+        || j_vertices == NULL
+        || isGPGPU) {
+        return;
+    }
+
+    joint_vao.bind();
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+    m_root_joint->setVertices(j_vertices, m_current_animation_frame);
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+
+    joint_vao.release();
+
+    m_vao.bind();
+
+    m_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_vertexBuffer.bind();
+    m_vertexBuffer.allocate(&(modelMesh->vertices.front()), modelMesh->vertices.size() * sizeof(trimesh::point));
+
+    // render skinning
+    modelMesh->vertices = m_originSkinVertices;
+    m_root_joint->skinModel(modelMesh, m_current_animation_frame);
+
+    m_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_vertexBuffer.bind();
+    m_vertexBuffer.allocate(&(modelMesh->vertices.front()), modelMesh->vertices.size() * sizeof(trimesh::point));
+
+    m_vao.release();
 }
 
 
@@ -496,7 +513,10 @@ void glShaderWindow::bindSceneToProgram()
         j_colors[i] = trimesh::point(0.8, 0.2, 0.2, 1);
       }
 
-      m_root_joint->setVertices(j_vertices, m_current_animation_frame);
+      joint_vao.release();
+      updateVerticesPosition();
+      joint_vao.bind();
+
       m_root_joint->setIndices(j_indices);
     }
 
@@ -648,6 +668,7 @@ void glShaderWindow::openScene()
                              tr("Could not load file ") + modelName, QMessageBox::Ok);
         openSceneFromFile();
     }
+    m_originSkinVertices = modelMesh->vertices;
     modelMesh->need_bsphere();
     modelMesh->need_bbox();
     modelMesh->need_normals();
