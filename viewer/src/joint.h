@@ -115,6 +115,7 @@ public :
 	void readWeightFile(std::string fileName);
 	void checkName(std::ifstream &ifs);
 	void readWeight(std::ifstream &ifs);
+  void skinModel(trimesh::TriMesh **skinMesh, std::string weigthFile, int frame);
 };
 
 

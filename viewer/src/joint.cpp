@@ -223,7 +223,6 @@ void Joint::_setIndicesRec(int *indices, int &index) {
   }
 }
 
-
 void Joint::readWeightFile(std::string fileName){
   cout << "Loading from " << fileName << endl;
   ifstream inputfile(fileName.data());
@@ -247,7 +246,6 @@ void Joint::checkName(std::ifstream &ifs){
   }
 }
 
-
 void Joint::readWeight(std::ifstream &ifs){
   string buf;
   ifs >> buf;
@@ -255,4 +253,9 @@ void Joint::readWeight(std::ifstream &ifs){
   for(Joint* child : _children) {
     child->readWeight(ifs);
   }
+}
+
+void Joint::skinModel(trimesh::TriMesh **skinMesh, string weigthFile, int frame) {
+  (*skinMesh)->vertices;
+  //weigths = readFromFile(weigthFile)
 }
