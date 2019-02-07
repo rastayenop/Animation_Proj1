@@ -271,7 +271,8 @@ void Joint::skinModel(trimesh::TriMesh *skinMesh, int frame) {
 
 
 void Joint::addJointWeight(QVector3D initVec, QVector3D &sumVec, int point){
-  sumVec = sumVec + this->weightOnPoints[point] * _curMat * initVec;
+  QVector3D pjoint = _curMat * initVec;
+  sumVec = sumVec + this->weightOnPoints[point] * pjoint;
   for(Joint* child : _children) {
     child->addJointWeight(initVec, sumVec, point);
   }
