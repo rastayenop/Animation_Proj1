@@ -116,7 +116,7 @@ bool OpenGLWindow::event(QEvent *event)
         } else {
             t = std::chrono::high_resolution_clock::now();
             diff = std::chrono::duration_cast<chrono_duration_t>(t-m_animation_t0).count();
-            frame = static_cast<int>(floor((diff)*Joint::frameTime))%Joint::frames + 1;
+            frame = static_cast<int>(floor((diff)/Joint::frameTime))%Joint::frames + 1;
         }
     }
 

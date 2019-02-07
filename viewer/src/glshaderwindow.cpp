@@ -1244,7 +1244,7 @@ void glShaderWindow::render()
         // Draw the entire scene:
         //draw the lemming or something else
         m_vao.bind();
-        //glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
         m_vao.release();
         //draw the ground
         ground_vao.bind();
@@ -1323,7 +1323,7 @@ void glShaderWindow::render()
         }
         ground_vao.bind();
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         ground_vao.release();
         ground_program->release();
 

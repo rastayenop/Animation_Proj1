@@ -39,7 +39,8 @@ Joint* Joint::createFromFile(std::string fileName) {
         inputfile >> buf;
         inputfile >> buf;
         inputfile >> buf;
-        frameTime = std::stof(buf);
+        frameTime = 100;
+        //frameTime = std::stof(buf);
         //itérations sur les mouvements
         for (int i=0; i<nbFrames; i++) {
           Joint::readMotion(inputfile, root);
@@ -113,11 +114,9 @@ Joint* Joint::readChild(std::ifstream &ifs, Joint* parent) {
 
 void Joint::readMotion(std::ifstream &ifs, Joint* node){
   std::string buf;
-  //std::cout << "d_size = " << node->_dofs.size() << std::endl;
   int i = 0;
   for(AnimCurve &animCurve : (*node)._dofs){
     ifs >> buf;
-    //std::cout << "curve value (" << i << ") = " << buf << std::endl;
     animCurve._values.push_back(std::stod(buf));
     i++;
   }
@@ -149,18 +148,20 @@ void Joint::animate(Joint* parent, int iframe){
 
 void Joint::updateMatrix(Joint* parent){
   QMatrix4x4 localTransform;
-  localTransform.setToIdentity();
-  localTransform.rotate(_curRz, 0, 0, 1);
-  localTransform.rotate(_curRy, 0, 1, 0);
-  localTransform.rotate(_curRx, 1, 0, 0);
   if(parent!=NULL){
-    QMatrix4x4 rotationParent = parent->_curMat;
+    localTransform = parent->_curMat;
     localTransform.translate(this->_offX, this->_offY, this->_offZ);
-    this->_curMat = rotationParent * localTransform;
+    localTransform.rotate(_curRz, 0, 0, 1);
+    localTransform.rotate(_curRy, 0, 1, 0);
+    localTransform.rotate(_curRx, 1, 0, 0);
   }else {
+    localTransform.setToIdentity();
     localTransform.translate(this->_curTx, this->_curTy, this->_curTz);
-    this->_curMat = localTransform;
+    localTransform.rotate(_curRz, 0, 0, 1);
+    localTransform.rotate(_curRy, 0, 1, 0);
+    localTransform.rotate(_curRx, 1, 0, 0);
   }
+  this->_curMat = localTransform;
 }
 
 
@@ -219,5 +220,28 @@ void Joint::_setIndicesRec(int *indices, int &index) {
     indices[index] = child->_glIdentifier;
     index++;
     child->_setIndicesRec(indices, index);
+  }
+}
+
+
+void Joint::readWeight(std::string fileName){
+  cout << "Loading from " << fileName << endl;
+  ifstream inputfile(fileName.data());
+  if(inputfile.good()) {
+    this->checkName(inputfile);
+    while(!inputfile.eof()) {
+      string buf;
+      inputfile >> buf;
+    }}
+}
+
+void Joint::checkName(std::ifstream &ifs){
+  string buf;
+  ifs >> buf;
+  if(buf!=_name ){
+    exit(1);
+  }
+  for(Joint* child : _children) {
+    child->checkName(ifs);
   }
 }

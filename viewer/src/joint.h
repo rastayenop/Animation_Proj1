@@ -110,6 +110,9 @@ public :
   void setVertices(trimesh::point *vertices, int iframe, Joint* parent=NULL);
   void setIndices(int *indices);
   void _setIndicesRec(int *indices, int &index);
+
+	void readWeight(std::string fileName);
+	void checkName(std::ifstream &ifs);
 };
 
 
