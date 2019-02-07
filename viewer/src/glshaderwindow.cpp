@@ -477,34 +477,10 @@ void glShaderWindow::bindSceneToProgram()
         j_colors[i] = trimesh::point(0.8, 0.2, 0.2, 1);
       }
 
-
-      /*for (int i = 0; i < j_numPoints; i++) {
-        std::cout << "v[" << i << "] = "
-          << " " << j_vertices[i][0]
-          << " " << j_vertices[i][1]
-          << " " << j_vertices[i][2] << std::endl;
-      }
-      for (int i = 0; i < j_numPoints - 1; i++) {
-        std::cout << "(" << j_indices[2*i] << ", " << j_indices[2*i + 1] << ")" << std::endl;
-      }*/
-
-
-      m_root_joint->setVertices(j_vertices, 15);
+      m_root_joint->setVertices(j_vertices, 50);
       m_root_joint->setIndices(j_indices);
     }
 
-    /*j_vertices = new trimesh::point[2];
-    j_colors = new trimesh::point[2];
-    j_indices = new int[2];
-    j_numPoints = 2;
-    j_numIndices = 2;
-
-    j_vertices[0] = trimesh::point(0, 0, 0, 1);
-    j_vertices[1] = trimesh::point(100, 100, 100, 1);
-    j_colors[0] = trimesh::point(0.8, 0.2, 0.2, 1);
-    j_colors[1] = trimesh::point(0.8, 0.2, 0.2, 1);
-    j_indices[0] = 0;
-    j_indices[1] = 1;*/
 
     joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     joint_vertexBuffer.bind();
