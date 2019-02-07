@@ -46,6 +46,7 @@ public :
 	std::vector<Joint*> _children;	// children of the current joint
   QMatrix4x4 _curMat;
   int _glIdentifier;
+	std::vector<float> weightOnPoints;
   static float frameTime;
   static int frames;
   static int glIdCounter;
@@ -111,8 +112,9 @@ public :
   void setIndices(int *indices);
   void _setIndicesRec(int *indices, int &index);
 
-	void readWeight(std::string fileName);
+	void readWeightFile(std::string fileName);
 	void checkName(std::ifstream &ifs);
+	void readWeight(std::ifstream &ifs);
 };
 
 

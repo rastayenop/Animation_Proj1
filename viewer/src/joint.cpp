@@ -224,7 +224,7 @@ void Joint::_setIndicesRec(int *indices, int &index) {
 }
 
 
-void Joint::readWeight(std::string fileName){
+void Joint::readWeightFile(std::string fileName){
   cout << "Loading from " << fileName << endl;
   ifstream inputfile(fileName.data());
   if(inputfile.good()) {
@@ -232,16 +232,27 @@ void Joint::readWeight(std::string fileName){
     while(!inputfile.eof()) {
       string buf;
       inputfile >> buf;
+      this->readWeight(inputfile);
     }}
 }
 
 void Joint::checkName(std::ifstream &ifs){
   string buf;
   ifs >> buf;
-  if(buf!=_name ){
+  if(buf!=_name){
     exit(1);
   }
   for(Joint* child : _children) {
     child->checkName(ifs);
+  }
+}
+
+
+void Joint::readWeight(std::ifstream &ifs){
+  string buf;
+  ifs >> buf;
+  this->weightOnPoints.push_back(std::stof(buf));
+  for(Joint* child : _children) {
+    child->readWeight(ifs);
   }
 }
