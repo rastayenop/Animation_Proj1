@@ -45,6 +45,25 @@ glShaderWindow::glShaderWindow(QWindow *parent)
     m_compShaderSuffix << "*.comp" << "*.cs";
 }
 
+void glShaderWindow::updateVerticesPosition() {
+    if (m_root_joint == NULL
+        || j_vertices == NULL
+        || m_current_animation_frame == 0) {
+        return;
+    }
+    joint_vao.bind();
+
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+    m_root_joint->setVertices(j_vertices, m_current_animation_frame);
+    joint_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    joint_vertexBuffer.bind();
+    joint_vertexBuffer.allocate(j_vertices, j_numPoints * sizeof(trimesh::point));
+
+    joint_vao.release();
+}
+
 glShaderWindow::~glShaderWindow()
 {
     if (modelMesh) delete modelMesh;
@@ -477,7 +496,7 @@ void glShaderWindow::bindSceneToProgram()
         j_colors[i] = trimesh::point(0.8, 0.2, 0.2, 1);
       }
 
-      m_root_joint->setVertices(j_vertices, 50);
+      m_root_joint->setVertices(j_vertices, m_current_animation_frame);
       m_root_joint->setIndices(j_indices);
     }
 
@@ -1303,8 +1322,8 @@ void glShaderWindow::render()
             // TODO_shadowMapping: send the right transform here
         }
         ground_vao.bind();
-        //glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         ground_vao.release();
         ground_program->release();
 

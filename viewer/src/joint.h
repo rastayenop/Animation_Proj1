@@ -46,6 +46,8 @@ public :
 	std::vector<Joint*> _children;	// children of the current joint
   QMatrix4x4 _curMat;
   int _glIdentifier;
+  static float frameTime;
+  static int frames;
   static int glIdCounter;
 
 public :
