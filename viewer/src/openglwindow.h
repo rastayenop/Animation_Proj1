@@ -45,7 +45,12 @@
 #include <QOpenGLFunctions_4_1_Core>
 #endif
 
+#include <chrono>
+
 #include "joint.h"
+
+typedef std::chrono::time_point<std::chrono::high_resolution_clock> chrono_t;
+typedef std::chrono::milliseconds chrono_duration_t;
 
 
 QT_BEGIN_NAMESPACE
@@ -78,9 +83,12 @@ public:
         m_update_pending = false;
         if (m_root_joint == 0) {
             m_root_joint = Joint::createFromFile("bvh/run1.bvh");
+            m_current_animation_frame = 0;
         }
         renderNow();
     }
+
+    virtual void updateVerticesPosition() = 0;
 
 public slots:
     void renderLater();
@@ -90,10 +98,12 @@ protected:
     bool event(QEvent *event);
     void exposeEvent(QExposeEvent *event);
     Joint* m_root_joint;
+    int m_current_animation_frame;
 
 private:
     bool m_update_pending;
     bool m_animating;
+    chrono_t m_animation_t0;
 
     QOpenGLContext *m_context;
     QOpenGLPaintDevice *m_device;

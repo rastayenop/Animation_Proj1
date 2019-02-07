@@ -7,6 +7,8 @@
 using namespace std;
 
 int Joint::glIdCounter = 0;
+float Joint::frameTime = 0;
+int Joint::frames = 0;
 
 
 Joint* Joint::createFromFile(std::string fileName) {
@@ -32,10 +34,12 @@ Joint* Joint::createFromFile(std::string fileName) {
         Joint::checkToken("Frames:", buf);
         inputfile >> buf;
         int nbFrames = std::stoi(buf);
+        Joint::frames = nbFrames;
         // La ligne "Frame time: ..." dans le BVH ne nous interesse point
         inputfile >> buf;
         inputfile >> buf;
         inputfile >> buf;
+        frameTime = std::stof(buf);
         //itérations sur les mouvements
         for (int i=0; i<nbFrames; i++) {
           Joint::readMotion(inputfile, root);

@@ -47,6 +47,7 @@
 #include <QtGui/QPainter>
 #include <QDebug>
 #include <time.h>
+#include <iostream>
 
 //! [1]
 OpenGLWindow::OpenGLWindow(QWindow *parent)
@@ -102,12 +103,39 @@ void OpenGLWindow::renderLater()
 
 bool OpenGLWindow::event(QEvent *event)
 {
+    static int ievent=0;
+
+    chrono_t t;
+    int frame;
+    int diff;
+    if (m_animating) {
+        if (m_current_animation_frame == 0) {
+            m_animation_t0 = std::chrono::high_resolution_clock::now();
+            m_current_animation_frame = 1;
+            frame = 1;
+        } else {
+            t = std::chrono::high_resolution_clock::now();
+            diff = std::chrono::duration_cast<chrono_duration_t>(t-m_animation_t0).count();
+            frame = static_cast<int>(floor((diff)*Joint::frameTime))%Joint::frames + 1;
+        }
+    }
+
     switch (event->type()) {
     case QEvent::UpdateRequest:
         m_update_pending = false;
+        if (m_animating) {
+            m_current_animation_frame = frame;
+            updateVerticesPosition();
+        }
         renderNow();
         return true;
     default:
+        if (m_animating && frame != m_current_animation_frame) {
+            m_current_animation_frame = frame;
+            updateVerticesPosition();
+            renderNow();
+        }
+
         return QWindow::event(event);
     }
 }

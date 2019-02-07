@@ -30,6 +30,7 @@ public:
     inline const QString& getWorkingDirectory() { return workingDirectory;};
     inline const QStringList& fragShaderSuffix() { return m_fragShaderSuffix;};
     inline const QStringList& vertShaderSuffix() { return m_vertShaderSuffix;};
+    void updateVerticesPosition();
 
 public slots:
     void openSceneFromFile();
