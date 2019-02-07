@@ -227,11 +227,9 @@ void Joint::readWeightFile(std::string fileName){
   cout << "Loading from " << fileName << endl;
   ifstream inputfile(fileName.data());
   if(inputfile.good()) {
-    this->checkName(inputfile);
+    checkName(inputfile);
     while(!inputfile.eof()) {
-      string buf;
-      inputfile >> buf;
-      this->readWeight(inputfile);
+      readWeight(inputfile);
     }}
 }
 
@@ -249,13 +247,29 @@ void Joint::checkName(std::ifstream &ifs){
 void Joint::readWeight(std::ifstream &ifs){
   string buf;
   ifs >> buf;
-  this->weightOnPoints.push_back(std::stof(buf));
+  weightOnPoints.push_back(std::stof(buf));
   for(Joint* child : _children) {
     child->readWeight(ifs);
   }
 }
 
-void Joint::skinModel(trimesh::TriMesh **skinMesh, string weigthFile, int frame) {
-  (*skinMesh)->vertices;
-  //weigths = readFromFile(weigthFile)
+void Joint::skinModel(trimesh::TriMesh *skinMesh, int frame) {
+  QVector3D interVec;
+  QVector3D finalVec;
+  int cpt = 0;
+  for (trimesh::point &point : skinMesh->vertices) {
+    interVec = QVector3D(point[0], point[1], point[2]);
+    finalVec = QVector3D(0.0, 0.0, 0.0);
+    this->addJointWeight(interVec, finalVec, cpt);
+    cpt = cpt+1;
+    point = trimesh::point(finalVec.x(), finalVec.y(), finalVec.z(), 1.0);
+  }
+}
+
+
+void Joint::addJointWeight(QVector3D initVec, QVector3D &sumVec, int point){
+  sumVec = sumVec + this->weightOnPoints[point] * _curMat * initVec;
+  for(Joint* child : _children) {
+    child->addJointWeight(initVec, sumVec, point);
+  }
 }

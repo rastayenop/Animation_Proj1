@@ -115,7 +115,8 @@ public :
 	void readWeightFile(std::string fileName);
 	void checkName(std::ifstream &ifs);
 	void readWeight(std::ifstream &ifs);
-  void skinModel(trimesh::TriMesh **skinMesh, std::string weigthFile, int frame);
+  void skinModel(trimesh::TriMesh *skinMesh, int frame);
+	void addJointWeight(QVector3D initVec, QVector3D &sumVec, int point);
 };
 
 
