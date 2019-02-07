@@ -1223,14 +1223,17 @@ void glShaderWindow::render()
         shadowMapGenerationProgram->setUniformValue("matrix", lightCoordMatrix);
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
         // Draw the entire scene:
+        //draw the lemming or something else
         m_vao.bind();
         //glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
         m_vao.release();
+        //draw the ground
         ground_vao.bind();
-        //glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
+        // draw the bonhomme
         joint_vao.bind();
-        glDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
+        //lDrawElements(GL_LINES, j_numIndices, GL_UNSIGNED_INT, 0);
         joint_vao.release();
         glFinish();
         // done. Back to normal drawing.
@@ -1275,7 +1278,7 @@ void glShaderWindow::render()
 
     m_vao.bind();
     // TODO : décommenter pour TP2
-    //glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 3 * m_numFaces, GL_UNSIGNED_INT, 0);
     m_vao.release();
     m_program->release();
 

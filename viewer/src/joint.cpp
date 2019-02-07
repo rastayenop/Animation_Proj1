@@ -184,7 +184,6 @@ int Joint::initalizeGLIds() {
 
 void Joint::initGLIdsRec() {
   _glIdentifier = Joint::glIdCounter;
-  //std::cout << _name << " id = " << _glIdentifier << endl;
   Joint::glIdCounter++;
   for(Joint* child : _children) {
     child->initGLIdsRec();
