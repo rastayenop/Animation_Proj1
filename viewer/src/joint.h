@@ -1,15 +1,11 @@
 #ifndef _JOINT_H_
 #define _JOINT_H_
-#define GLM_ENABLE_EXPERIMENTAL
 
 #include <string>
 #include <vector>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-#include "glm/glm/glm.hpp"
-#include <glm/glm/gtc/matrix_transform.hpp>
-#include <glm/glm/gtx/euler_angles.hpp>
 #include "TriMesh.h"
 #include <QMatrix4x4>
 #include <QVector3D>
